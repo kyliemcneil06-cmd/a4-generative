@@ -23,7 +23,7 @@ style.css         - edit however you like
 3. Open `dev/sketch1.html` with Live Server to work on sketch 1
 4. Open `dev/sketch2.html` with Live Server to work on sketch 2
 5. Open `index.html` with Live Server to work on your remix
-6. Fill in the credits section in `index.html`
+6. Fill in the credits in the file credits.json - See the Assignment 4 guide on Michael's own visa2P61 page for instructions.
 
 ## Note
 
