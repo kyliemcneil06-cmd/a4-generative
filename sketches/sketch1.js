@@ -12,249 +12,168 @@ function draw() {
   // your code here
 }
 
+/* 
+  
+  ___     _           _         _   _              
+ |_ _|_ _| |_ ___ _ _| |___  __| |_(_)_ _  __ _ ___
+  | || ' \  _/ -_) '_| / _ \/ _| / / | ' \/ _` (_-<
+ |___|_||_\__\___|_| |_\___/\__|_\_\_|_||_\__, /__/
+                                          |___/
+                                                                            
+By Arden Schager
+https://www.nan.ooo
 
-// Sketch.js 
-// _________________________________________
+A series of rotating polygons layered on top of each other, each with shifting lines that generate colorful moire patterns.
+An optical illusion experiment inspired by Casey Reas and Zach Lieberman for Parsons DTMFA CC class
 
-// Hilbert © 2024-02-11 by Zaron Chen is licensed under CC BY-NC-SA 3.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/3.0/
-// Space-filling algorithms 🍄 #WCCChallenge
+*/
 
-import { mountFlex } from "https://cdn.jsdelivr.net/npm/p5.flex@0.2.0/src/p5.flex.min.mjs"
-import { mountControl } from "./Controls.js"
-import { createNoise3D } from "https://cdn.skypack.dev/simplex-noise@4.0.0"
-import { vert, TexFrag, BlurFrag, GrainFrag, MixFrag } from "./shader.js"
+const NUM_LINE_CIRCLES= 0;
+const NUM_LINE_RECTS = 16;
+const TIME_MOD = 0.00005;
+const TIME_COLOR_MOD = 0.00015;
+const RECT_ROT_RADIUS = 0.3;
+const TIME_SCALE = 0.5;
 
-mountFlex(p5)
-mountControl(p5)
+const FRAME_OFFSET = Math.random() * 10000;
 
-new p5((p) => {
-	const snoiseSeed = { x: p.random(), y: p.random() }
-	const snoiseX3D = createNoise3D(() => snoiseSeed.x)
-	const snoiseY3D = createNoise3D(() => snoiseSeed.y)
+let baseCanvas;
+let linesShader;
 
-	const [WIDTH, HEIGHT] = [600, 600]
-	const PIXEL_DENSITY = 1
-	const CANVAS_SIZE = [WIDTH, HEIGHT]
-	const TEXEL_SIZE = [1 / (WIDTH * PIXEL_DENSITY), 1 / (HEIGHT * PIXEL_DENSITY)]
+let shapeAnimator;
 
-	let TexPass, BlurPass, GrainPass, MixPass
-	let tex, gfx
-	let t, color
+let colorScheme = chroma.scale(['#da3843', '#e4bb33', '#16d951', '#34beec', '#2635d9', '#020208', '#9846df', '#e9ec42', '#da3843']);
 
-	const palette = ["#560100", "#060626", "#151f05"]
-	const HCVertices = []
-	const ORDER = 6
-	const DIRECTION = p.TOP
-	const NOISE_SCALE = 50
-	const PADDING = 50
-	const THICKNESS = 7
-	const IS_SMOOTH_CURVE = false
-	const NO_SHADER = false
-	const UNREAL = p.random([false, true])
-	const SCALE = 2
-	const SPEED = 0.5
+class LinesShape {
+    constructor(parameters) {
+        for (let [key, value] of Object.entries(parameters)) {
+            this[key] = value;
+        }
+    }
 
-	p.setup = () => {
-		p.createCanvas(WIDTH, HEIGHT)
-		p.flex({ container: { padding: "20px" } })
-		p.containerBgColor(51)
-		p.parentBgColor(51)
-		p.pixelDensity(PIXEL_DENSITY)
+    draw() {
+        if (this.position == null || this.angle == null || this.radius == null || linesShader == null) return;
+    }
+}
 
-		tex = p.createGraphics(WIDTH, HEIGHT, p.WEBGL)
-		gfx = p.createGraphics(WIDTH, HEIGHT, p.WEBGL)
+class LineCircle extends LinesShape {
+    constructor(parameters) {
+        super(parameters);
+    }
 
-		TexPass = p.createShader(vert, TexFrag)
-		BlurPass = p.createShader(vert, BlurFrag)
-		GrainPass = p.createShader(vert, GrainFrag)
-		MixPass = p.createShader(vert, MixFrag)
+    draw(position) {
+        super.draw();
+    }
+}
 
-		initTex()
+class LinesRect extends LinesShape {
+    constructor(parameters) {
+        super(parameters);
+        this.timeOffset = 1000 * Math.random();
+    }
 
-		setCurveStyles()
-		getHCVertices(PADDING)
+    draw() {
+        super.draw();
+        // linesShader.setUniform('uPosition', this.position);
+        linesShader.setUniform('uAngle', this.angle);
+        // linesShader.setUniform('uRadius', this.radius);
+        linesShader.setUniform('uLineWidth', this.linesWidth);
+        linesShader.setUniform('uLineScale', this.linesScale);
 
-		color = hex2rgb(p.random(palette))
+        linesShader.setUniform('uRgb0', this.rgb0);
+        linesShader.setUniform('uRgb1', this.rgb1);
+        linesShader.setUniform('uCenter', this.center);
+        linesShader.setUniform('uTime', frameCount * 0.02 * TIME_SCALE + this.timeOffset);
+        // linesShader.setUniform('u_color', this.color);
+        shader(linesShader);
+        rect(0, 0, width, height);
+    }
+}
 
-		p.PressLoopToggle(" ")
-		
-		p.describe(`"Hilbert" by Zaron Chen, for Space-filling algorithms 🍄 #WCCChallenge`)
-	}
+class LinesShapeAnimator {
+    constructor(parameters) {
+        if (parameters != null) {
+            for (let [key, value] of Object.entries(parameters)) {
+                this[key] = value;
+            }
+        }
+        this.init();
+    }
 
-	p.draw = () => {
-		t = (p.frameCount / 60) * SPEED
+    init() {
+        this.linesRects = [];
+        this.linesCircles = [];
+        const dim = Math.max(width, height);
+        const linesScale = Math.floor(map(dim, 300, 2500, 4, 20));
+        for (let i = 0; i < NUM_LINE_RECTS; i++) {
+            this.linesRects.push(new LinesRect({
+                linesWidth: -0.9,
+                linesScale: linesScale,
+            }))
+        }
+    }
 
-		p.background(0)
-		gfx.background(0)
+    animate() {
+        for (let i = 0; i < this.linesRects.length; i++) {
+            const linesRect = this.linesRects[i];
+            let angleOffset = Math.floor(i - this.linesRects.length * 0.5 + 1);
+            angleOffset -= (angleOffset <= 0 ? 1 : 0);
+            const a =  i * 2 * Math.PI / this.linesRects.length;
+            linesRect.angle = a + (frameCount * TIME_SCALE + mouseX + FRAME_OFFSET) * TIME_MOD * angleOffset;
+            const t = (i / this.linesRects.length + (frameCount * TIME_SCALE + mouseY - mouseX) * TIME_COLOR_MOD + FRAME_OFFSET) % 1;
+            const color0 = colorScheme(t).saturate().darken(2).rgb();
+            linesRect.rgb0 = [color0[0] / 255, color0[1] / 255, color0[2] / 255];
+            linesRect.rgb1 = [0, 0, 0];
 
-		hilbertCurve()
+            const x = 0.4 + RECT_ROT_RADIUS * Math.cos(t * 2 * Math.PI);
+            const y = 0.3 + RECT_ROT_RADIUS * Math.sin(t * 2 * Math.PI);
+            linesRect.center = [x, y];
+        }
+    }
 
-		if (NO_SHADER) return
-		blur(p._renderer, [1, 0])
-		blur(gfx, [0, 1])
-		grain(gfx)
-		mix(tex, gfx, color)
-		p.image(gfx, 0, 0)
+    draw() {
+        for (let linesRect of this.linesRects) {
+            linesRect.draw();
+        }
+        // for (let linesCircles of this.linesCircles) {
+        //     linesCircles.draw();
+        // }
+    }
+}
 
-		if (!UNREAL) return
-		p.filter(p.DILATE)
-		p.filter(p.POSTERIZE, 4)
-	}
+function preload() {
+    linesShader = loadShader('lines.vert', 'lines.frag');
+}
 
-	const hex2rgb = (hex) => {
-		const bigint = parseInt(hex.replace("#", ""), 16)
-		return [
-			((bigint >> 16) & 255) / 255,
-			((bigint >> 8) & 255) / 255,
-			(bigint & 255) / 255,
-		]
-	}
+function setup() {
+    baseCanvas = createCanvas(windowWidth, windowHeight, WEBGL);
+    blendMode(ADD);
+    shapeAnimator = new LinesShapeAnimator();
+    noCursor();
+		describe("A series of rotating polygons layered on top of each other, each with shifting lines that generate colorful moire patterns.");
+}
+  
+function draw() {
+    background(0);
+    linesShader.setUniform('uAspectRatio', windowHeight / windowWidth);
+    shapeAnimator.animate();
+    shapeAnimator.draw();
+}
 
-	const setCurveStyles = () => {
-		p.stroke(255)
-		p.strokeWeight(THICKNESS)
-		p.strokeCap(p.PROJECT)
-		p.noFill()
-	}
+function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+    shapeAnimator.init();
+}
 
-	const commonUniform = (shader) => {
-		shader.setUniform("canvasSize", CANVAS_SIZE)
-		shader.setUniform("texelSize", TEXEL_SIZE)
-		shader.setUniform("mouse", [p.mouseX / WIDTH, p.mouseY / HEIGHT])
-		shader.setUniform("time", t)
-		shader.setUniform("scale", SCALE)
-	}
-
-	const initTex = () => {
-		tex.shader(TexPass)
-		commonUniform(TexPass)
-		tex.quad(-1, 1, 1, 1, 1, -1, -1, -1)
-	}
-
-	const blur = (tex, direction) => {
-		gfx.shader(BlurPass)
-		commonUniform(BlurPass)
-		BlurPass.setUniform("tex0", tex)
-		BlurPass.setUniform("direction", direction)
-		gfx.quad(-1, 1, 1, 1, 1, -1, -1, -1)
-	}
-
-	const grain = (tex) => {
-		gfx.shader(GrainPass)
-		commonUniform(GrainPass)
-		GrainPass.setUniform("tex0", tex)
-		gfx.quad(-1, 1, 1, 1, 1, -1, -1, -1)
-	}
-
-	const mix = (base, blend, color) => {
-		gfx.shader(MixPass)
-		commonUniform(MixPass)
-		MixPass.setUniform("tex0", base)
-		MixPass.setUniform("tex1", blend)
-		MixPass.setUniform("color", color)
-		gfx.quad(-1, 1, 1, 1, 1, -1, -1, -1)
-	}
-
-	const noisePosition = (pnt, t) => {
-		const sPnt = p5.Vector.mult(pnt, 0.01)
-
-		let nx = 0
-		nx += 1.0 * snoiseX3D(1 * sPnt.x, 1 * sPnt.y, t)
-		nx += 0.5 * snoiseX3D(2 * sPnt.x, 2 * sPnt.y, t)
-		nx += 0.25 * snoiseX3D(4 * sPnt.x, 4 * sPnt.y, t)
-		nx /= 1 + 0.5 + 0.25
-
-		let ny = 0
-		ny += 1.0 * snoiseY3D(1 * sPnt.x, 1 * sPnt.y, t)
-		ny += 0.5 * snoiseY3D(2 * sPnt.x, 2 * sPnt.y, t)
-		ny += 0.25 * snoiseY3D(2 * sPnt.x, 2 * sPnt.y, t)
-		ny /= 1 + 0.5 + 0.25
-
-		return [nx, ny]
-	}
-
-	const smoothstep = (edge0, edge1, x) => {
-		x = p.constrain((x - edge0) / (edge1 - edge0), 0, 1)
-		return x * x * (3 - 2 * x)
-	}
-
-	const hilbertCurve = () => {
-		const mv = p.createVector(p.mouseX, p.mouseY)
-		p.beginShape()
-		for (let i = -1; i <= HCVertices.length; i++) {
-			const index = p.constrain(i, 0, HCVertices.length - 1)
-			const pnt = HCVertices[index]
-			hilbertCurveVertex(pnt, mv)
-		}
-		p.endShape()
-	}
-
-	const hilbertCurveVertex = (pnt, mv) => {
-		const pntToMouse = pnt.dist(mv)
-		const d = 1.5 * smoothstep(1.5, 0, pntToMouse / (WIDTH / SCALE))
-
-		const [nx, ny] = noisePosition(pnt, t)
-		const xoff = d * NOISE_SCALE * nx
-		const yoff = d * NOISE_SCALE * ny
-
-		IS_SMOOTH_CURVE
-			? p.curveVertex(pnt.x + xoff, pnt.y + yoff)
-			: p.vertex(pnt.x + xoff, pnt.y + yoff)
-	}
-
-	const getHCVertices = (padding) => {
-		const GRID = p.pow(2, ORDER)
-		const MAX_VERTICES = p.pow(GRID, 2)
-		for (let i = 0; i < MAX_VERTICES; i++) {
-			const pt = getHCVertex(i, GRID)
-			const x = p.map(pt.x, 0, GRID - 1, padding, WIDTH - padding)
-			const y = p.map(pt.y, 0, GRID - 1, padding, HEIGHT - padding)
-			HCVertices.push(p.createVector(x, y))
-		}
-	}
-
-	const getHCVertex = (i, GRID) => {
-		const points = [
-			p.createVector(0, 0),
-			p.createVector(0, 1),
-			p.createVector(1, 1),
-			p.createVector(1, 0),
-		]
-
-		let index = i & 3
-		const v = points[index]
-
-		for (let j = 1; j <= ORDER; j++) {
-			index = (i >>= 2) & 3
-			const len = p.pow(2, j)
-
-			if (index === 0) {
-				;[v.x, v.y] = [v.y, v.x]
-			} else if (index === 1) {
-				v.y += len
-			} else if (index === 2) {
-				v.x += len
-				v.y += len
-			} else if (index === 3) {
-				const tmp = len - 1 - v.x
-				v.x = len - 1 - v.y + len
-				v.y = tmp
-			}
-		}
-
-		if (DIRECTION === p.TOP) {
-			const tmp = v.x
-			v.x = v.y
-			v.y = GRID - 1 - tmp
-		} else if (DIRECTION === p.LEFT) {
-			v.x = GRID - 1 - v.x
-			v.y = GRID - 1 - v.y
-		} else if (DIRECTION === p.BOTTOM) {
-			const tmp = v.x
-			v.x = GRID - 1 - v.y
-			v.y = tmp
-		}
-
-		return v
-	}
-})
+function keyPressed() {
+    if (key == 'f') {
+        let fs = fullscreen();
+        if (fs) {
+          window.parent.postMessage('exitFullscreen', '*');
+        } else {
+          window.parent.postMessage('enterFullscreen', '*');
+        }
+        fullscreen(!fs);
+        shapeAnimator.init();
+    }
+}

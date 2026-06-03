@@ -67,11 +67,21 @@ nav a:hover {
   color: #eee;
 }
 
-/* Sketch1 */
-/* ______________________________ */
+/* sketch1 */
+/* ________________________ */
 
-body {
-	user-select: none;
-	touch-action: none;
+html, body {
+    margin: 0;
+    padding: 0;
 }
-
+canvas {
+    display: block;
+}
+.fullScreen {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+  
