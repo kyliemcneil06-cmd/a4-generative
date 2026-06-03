@@ -12,146 +12,43 @@ function draw() {
   // your code here
 }
 
-
-// Declare variables for the particle system and texture
-let particleTexture;
-let particleSystem;
-
-function preload() {
-  particleTexture = loadImage('assets/particle_texture.png');
-}
+// Define graphic as a global variable. This variable
+// will be the offscreen buffer.
+let graphic;
 
 function setup() {
-  // Set the canvas size
-  createCanvas(720, 400);
-  colorMode(HSB);
-
-  // Initialize the particle system
-  particleSystem = new ParticleSystem(
-    0,
-    createVector(width / 2, height - 60),
-    particleTexture
-  );
-
   describe(
-    'White circle gives off smoke in the middle of the canvas, with wind force determined by the cursor position.'
+    'Black canvas with a very dark grey rectangle in the middle. When the cursor is hovered over the canvas, a white circle follows the cursor in the black areas of the canvas, but not over the dark grey rectangle.'
   );
+  createCanvas(720, 400);
+
+  // Create the graphic that will be placed within the canvas.
+  graphic = createGraphics(405, 250);
 }
 
 function draw() {
-  background(20);
+  // Create a black rectangle to cover the canvas.
+  // Make the rectangle black with an alpha value of 12 so that
+  // the white circle following the cursor slowly fades into the background.
+  background(0, 12);
 
-  // Calculate the wind force based on the mouse x position
-  let dx = map(mouseX, 0, width, -0.2, 0.2);
-  let wind = createVector(dx, 0);
+  // Create the circle that will follow the cursor as it hovers
+  // over the canvas.
+  fill(255);
+  noStroke();
+  ellipse(mouseX, mouseY, 60, 60);
 
-  // Apply the wind and run the particle system
-  particleSystem.applyForce(wind);
-  particleSystem.run();
-  for (let i = 0; i < 2; i += 1) {
-    particleSystem.addParticle();
-  }
+  // Give the buffer a dark grey background.
+  // Any shapes within the buffer will have no fill.
+  graphic.background(51);
+  graphic.noFill();
 
-  // Draw an arrow representing the wind force
-  drawVector(wind, createVector(width / 2, 50, 0), 500);
+  // When the cursor hovers over the offscreen buffer, replicate the
+  // circle that is drawn when the cursor is hovering over the
+  // canvas. Within the buffer area, only show the outline of the circle.
+  graphic.stroke(255);
+  graphic.ellipse(mouseX - 150, mouseY - 75, 60, 60);
+
+  // Draw the buffer to the screen with image().
+  image(graphic, 150, 75);
 }
-
-// Display an arrow to show a vector magnitude and direction
-function drawVector(v, loc, scale) {
-  push();
-  let arrowSize = 4;
-  translate(loc.x, loc.y);
-  stroke(255);
-  strokeWeight(3);
-  rotate(v.heading());
-
-  let length = v.mag() * scale;
-  line(0, 0, length, 0);
-  line(length, 0, length - arrowSize, +arrowSize / 2);
-  line(length, 0, length - arrowSize, -arrowSize / 2);
-  pop();
-}
-
-class ParticleSystem {
-  constructor(particleCount, origin, textureImage) {
-    this.particles = [];
-
-    // Make a copy of the input vector
-    this.origin = origin.copy();
-    this.img = textureImage;
-    for (let i = 0; i < particleCount; ++i) {
-      this.particles.push(new Particle(this.origin, this.img));
-    }
-  }
-
-  run() {
-    // Loop through and run each particle
-    for (let i = this.particles.length - 1; i >= 0; i -= 1) {
-      let particle = this.particles[i];
-      particle.run();
-
-      // Remove dead particles
-      if (particle.isDead()) {
-        this.particles.splice(i, 1);
-      }
-    }
-  }
-
-  // Apply force to each particle
-  applyForce(dir) {
-    for (let particle of this.particles) {
-      particle.applyForce(dir);
-    }
-  }
-
-  addParticle() {
-    this.particles.push(new Particle(this.origin, this.img));
-  }
-} // class ParticleSystem
-
-class Particle {
-  constructor(pos, imageTexture) {
-    this.loc = pos.copy();
-
-    let xSpeed = randomGaussian() * 0.3;
-    let ySpeed = randomGaussian() * 0.3 - 1.0;
-
-    this.velocity = createVector(xSpeed, ySpeed);
-    this.acceleration = createVector();
-    this.lifespan = 100.0;
-    this.texture = imageTexture;
-    this.color = color(frameCount % 256, 255, 255);
-  }
-
-  // Update and draw the particle
-  run() {
-    this.update();
-    this.render();
-  }
-
-  // Draw the particle
-  render() {
-    imageMode(CENTER);
-    tint(this.color, this.lifespan);
-    image(this.texture, this.loc.x, this.loc.y);
-  }
-
-  applyForce(f) {
-    // Add the force vector to the current acceleration vector
-    this.acceleration.add(f);
-  }
-
-  isDead() {
-    return this.lifespan <= 0.0;
-  }
-
-  // Update the particle's position, velocity, lifespan
-  update() {
-    this.velocity.add(this.acceleration);
-    this.loc.add(this.velocity);
-    this.lifespan -= 2.5;
-
-    // Set the acceleration to zero
-    this.acceleration.mult(0);
-  }
-} // class Particle
