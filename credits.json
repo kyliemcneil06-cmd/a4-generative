@@ -1,9 +1,9 @@
 {
   "sketch1": {
-    "title": "Create Graphics",
+    "title": "Recursive Tree",
     "author": "Caleb Foss",
     "date": "2023-2024",
-    "source": "https://p5js.org/examples/advanced-canvas-rendering-create-graphics/"
+    "source": "https://p5js.org/examples/repetition-recursive-tree/"
   },
   "sketch2": {
     "title": "Create Graphics",
