@@ -15,7 +15,8 @@
 let angle;
 
 function setup() {
-  createCanvas(710, 400);
+  createCanvas(600, 500);  
+  // 710
   colorMode(HSB);
   angleMode(DEGREES);
 }
@@ -47,10 +48,11 @@ function draw() {
 
 function branch(h, level) {
   // Set the hue based on the recursion level
-  stroke(level * 25, 255, 255);
+  stroke(level * 57, 400, 800);
 
   // Each branch will be 2/3 the size of the previous one
-  h *= 0.66;
+  h *= 1.66;
+  // 0.66
 
   // Draw if our branch length > 2, otherwise stop the recursion
   if (h > 2) {
