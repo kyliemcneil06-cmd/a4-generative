@@ -66,3 +66,12 @@ nav a:hover {
 #credits a:hover {
   color: #eee;
 }
+
+/* Sketch1 */
+/* ______________________________ */
+
+body {
+	user-select: none;
+	touch-action: none;
+}
+
