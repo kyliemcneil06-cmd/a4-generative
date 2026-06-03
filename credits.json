@@ -1,14 +1,14 @@
 {
   "sketch1": {
-    "title": "Hilbert",
-    "author": "Zaron Chen",
-    "date": "February 10, 2024",
-    "source": "https://p5js.org/sketches/2174234/"
+    "title": "Create Graphics",
+    "author": "Caleb Foss",
+    "date": "2023-2024",
+    "source": "https://p5js.org/examples/advanced-canvas-rendering-create-graphics/"
   },
   "sketch2": {
-    "title": "source 2 title",
-    "author": "source 2 author",
-    "date": "source 2 date",
-    "source": "source 2 url"
+    "title": "Create Graphics",
+    "author": "Caleb Foss",
+    "date": "2023-2024",
+    "source": "https://p5js.org/examples/advanced-canvas-rendering-create-graphics/"
   }
 }
