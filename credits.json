@@ -1,9 +1,9 @@
 {
   "sketch1": {
-    "title": "source 1 title",
-    "author": "source 1 author",
-    "date": "source 1 date",
-    "source": "source 1 url"
+    "title": "Hilbert",
+    "author": "Zaron Chen",
+    "date": "February 10, 2024",
+    "source": "https://openprocessing.org/"
   },
   "sketch2": {
     "title": "source 2 title",
