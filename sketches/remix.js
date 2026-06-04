@@ -18,12 +18,7 @@ function draw() {
 
 // ________________________________
 
-  function draww() {
-  // // Create a black rectangle to cover the canvas.
-  // // Make the rectangle black with an alpha value of 12 so that
-  // // the white circle following the cursor slowly fades into the background.
-  // background(70, 19);
-  // // 12
+  function drawww() {
 
   // Create the circle that will follow the cursor as it hovers
   // over the canvas.
@@ -31,10 +26,6 @@ function draw() {
   noStroke();
   ellipse(mouseX, mouseY, 20, 20);
 
-  // Give the buffer a dark grey background.
-  // Any shapes within the buffer will have no fill.
-  // graphic.background(51);
-  // graphic.noFill();
 
   // When the cursor hovers over the offscreen buffer, replicate the
   // circle that is drawn when the cursor is hovering over the
@@ -44,6 +35,7 @@ function draw() {
 
   // Draw the buffer to the screen with image().
   image(graphic, 150, 75);
+
   }
   
 function draw() {
@@ -153,4 +145,3 @@ function branch(h, level) {
 
 //   // Draw the buffer to the screen with image().
 //   image(graphic, 150, 75);
-}
