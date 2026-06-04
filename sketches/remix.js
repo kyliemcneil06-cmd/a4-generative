@@ -39,7 +39,7 @@ function draw() {
   }
   
 function draw() {
-  background(0);
+  // background(70);
 
   // Calculate the angle based on the mouse position, maximum 90 degrees
   angle = (mouseX / width) * 90;
