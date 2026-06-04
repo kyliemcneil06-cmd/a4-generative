@@ -120,3 +120,5 @@ function branch(h, level) {
     pop();
   }
 }
+
+// this is the best version, come back to it if you mess it up to much
