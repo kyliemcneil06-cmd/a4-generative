@@ -69,7 +69,7 @@ function branch(h, level) {
   stroke(level * 57, 400, 800);
 
   // Each branch will be 2/3 the size of the previous one
-  h *= 0.70;
+  h *= 0.72;
   // 0.66
 
   // Draw if our branch length > 2, otherwise stop the recursion
