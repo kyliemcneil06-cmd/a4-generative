@@ -53,3 +53,10 @@ function draw() {
   // Draw the buffer to the screen with image().
   image(graphic, 150, 75);
 }
+
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'k' || event.key === 'K') {
+    window.location.reload();
+  }
+});

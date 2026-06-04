@@ -105,6 +105,8 @@ function branch(h, level) {
 }
 
 
+// I have absolutley no idea how I managed to make this, but I really like how much it looks at the one of those elecrtcity balls you see at a science museum. so i'm gonna keep it! :)
+
 // _________________________________
 
 // let graphic;
@@ -145,3 +147,10 @@ function branch(h, level) {
 
 //   // Draw the buffer to the screen with image().
 //   image(graphic, 150, 75);
+
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'k' || event.key === 'K') {
+    window.location.reload();
+  }
+});

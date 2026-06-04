@@ -84,3 +84,9 @@ function branch(h, level) {
     pop();
   }
 }
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'k' || event.key === 'K') {
+    window.location.reload();
+  }
+});
